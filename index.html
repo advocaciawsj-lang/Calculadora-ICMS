@@ -771,6 +771,25 @@ function showToast(msg, isError) {
 const acData = { acOrigem: [], acDestino: [] };
 const acTimers = {};
 
+// Mapa estado → UF
+const UF = {
+  'Acre':'AC','Alagoas':'AL','Amapá':'AP','Amazonas':'AM','Bahia':'BA',
+  'Ceará':'CE','Distrito Federal':'DF','Espírito Santo':'ES','Goiás':'GO',
+  'Maranhão':'MA','Mato Grosso':'MT','Mato Grosso do Sul':'MS','Minas Gerais':'MG',
+  'Pará':'PA','Paraíba':'PB','Paraná':'PR','Pernambuco':'PE','Piauí':'PI',
+  'Rio de Janeiro':'RJ','Rio Grande do Norte':'RN','Rio Grande do Sul':'RS',
+  'Rondônia':'RO','Roraima':'RR','Santa Catarina':'SC','São Paulo':'SP',
+  'Sergipe':'SE','Tocantins':'TO'
+};
+
+function formatCidade(item) {
+  const a = item.address || {};
+  const cidade = a.city || a.town || a.village || a.municipality || a.county || item.display_name.split(',')[0];
+  const estado = a.state || '';
+  const uf = UF[estado] || estado.substring(0, 2).toUpperCase();
+  return uf ? `${cidade}, ${uf}` : cidade;
+}
+
 async function acSearch(input, listId) {
   const q = input.value.trim();
   clearTimeout(acTimers[listId]);
@@ -786,12 +805,15 @@ async function acSearch(input, listId) {
       const list = document.getElementById(listId);
       list.innerHTML = '';
       if (!data.length) { acHide(listId); return; }
+      // Remove duplicatas por nome formatado
+      const vistos = new Set();
       data.forEach((item, i) => {
+        const nome = formatCidade(item);
+        if (vistos.has(nome)) return;
+        vistos.add(nome);
         const d = document.createElement('div');
         d.className = 'ac-item';
-        // Monta nome legível: Cidade, Estado, Brasil
-        const parts = item.display_name.split(',').map(s => s.trim());
-        d.textContent = parts.slice(0, 3).join(', ');
+        d.textContent = nome;
         d.onmousedown = (e) => { e.preventDefault(); acSelect(listId, i, input); };
         list.appendChild(d);
       });
@@ -802,8 +824,7 @@ async function acSearch(input, listId) {
 
 function acSelect(listId, idx, input) {
   const item = acData[listId][idx];
-  const parts = item.display_name.split(',').map(s => s.trim());
-  input.value = parts.slice(0, 3).join(', ');
+  input.value = formatCidade(item);
   input.dataset.lat = item.lat;
   input.dataset.lon = item.lon;
   document.getElementById(listId).classList.remove('show');
@@ -819,11 +840,11 @@ function acHide(listId) {
 async function geocodeCidade(query) {
   const url = 'https://nominatim.openstreetmap.org/search?q='
     + encodeURIComponent(query + ', Brasil')
-    + '&format=json&limit=1&accept-language=pt-BR';
+    + '&format=json&limit=1&addressdetails=1&accept-language=pt-BR';
   const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
   const d = await r.json();
   if (!d.length) return null;
-  return { lat: d[0].lat, lon: d[0].lon, nome: d[0].display_name.split(',')[0].trim() };
+  return { lat: d[0].lat, lon: d[0].lon, nome: formatCidade(d[0]) };
 }
 
 async function buscarDistancia() {
