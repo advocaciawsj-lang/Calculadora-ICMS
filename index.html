@@ -254,6 +254,43 @@
   /* ── FOOTER ── */
   .footer-note { text-align: center; font-size: .72rem; color: #475569; padding: 0 16px 32px; line-height: 1.7; }
 
+  /* ── ROTA / DISTÂNCIA ── */
+  .route-inputs { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; }
+  @media (max-width: 600px) { .route-inputs { grid-template-columns: 1fr; } }
+  .route-arrow { font-size: 1.5rem; color: var(--muted); text-align: center; padding-bottom: 10px; align-self: end; }
+  @media (max-width: 600px) { .route-arrow { display: none; } }
+  .btn-rota {
+    width: 100%; padding: 11px; font-size: .88rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase; color: #fff;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    border: none; border-radius: 8px; cursor: pointer; margin-top: 12px;
+    box-shadow: 0 4px 14px rgba(124,58,237,.35);
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn-rota:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,.5); }
+  .btn-rota:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .route-badge {
+    display: none; margin-top: 12px; padding: 10px 14px;
+    background: rgba(124,58,237,.1); border: 1px solid rgba(124,58,237,.3);
+    border-radius: 8px; font-size: .85rem; color: #c4b5fd; line-height: 1.6;
+  }
+  .route-badge.show { display: block; }
+  .ac-wrap { position: relative; }
+  .ac-list {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 200;
+    background: #1e293b; border: 1px solid var(--accent);
+    border-top: none; border-radius: 0 0 8px 8px;
+    max-height: 200px; overflow-y: auto; display: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  }
+  .ac-list.show { display: block; }
+  .ac-item {
+    padding: 9px 13px; font-size: .85rem; color: var(--text); cursor: pointer;
+    border-bottom: 1px solid rgba(51,65,85,.4);
+  }
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover, .ac-item.active { background: rgba(14,165,233,.12); color: var(--accent); }
+
   /* ── MOBILE / iPHONE ── */
   @supports (padding-bottom: env(safe-area-inset-bottom)) {
     body { padding-bottom: env(safe-area-inset-bottom); }
@@ -291,6 +328,38 @@
 <main>
 
   <p class="section-title">Dados do Frete</p>
+
+  <!-- ROTA: ORIGEM / DESTINO -->
+  <div class="grid-1">
+    <div class="card">
+      <div class="card-label">🗺️ Origem e Destino — Distância Automática</div>
+      <div class="route-inputs">
+        <div>
+          <p class="enc-sub-label">Cidade de Origem</p>
+          <div class="ac-wrap">
+            <input type="text" id="origemInput" placeholder="Ex: São Paulo, SP" autocomplete="off"
+              oninput="acSearch(this,'acOrigem')" onblur="acHide('acOrigem')">
+            <div class="ac-list" id="acOrigem"></div>
+          </div>
+        </div>
+        <div class="route-arrow">➜</div>
+        <div>
+          <p class="enc-sub-label">Cidade de Destino</p>
+          <div class="ac-wrap">
+            <input type="text" id="destinoInput" placeholder="Ex: Cuiabá, MT" autocomplete="off"
+              oninput="acSearch(this,'acDestino')" onblur="acHide('acDestino')">
+            <div class="ac-list" id="acDestino"></div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-rota" id="btnRota" onclick="buscarDistancia()">🗺️ Buscar Distância e Calcular ICMS</button>
+      <div class="route-badge" id="routeBadge"></div>
+      <div id="offlineMsg" style="display:none;margin-top:10px;padding:9px 13px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;font-size:.82rem;color:#fca5a5;">
+        📵 Sem internet — preencha o campo <strong>KM</strong> manualmente e clique em <strong>Calcular ICMS</strong>.
+      </div>
+      <p class="hint" style="margin-top:8px;">Com internet: busca a distância e calcula o ICMS automaticamente. Sem internet: use o campo KM abaixo.</p>
+    </div>
+  </div>
 
   <!-- ROW 1: KM + TIPO DE CARGA -->
   <div class="grid-2">
@@ -698,8 +767,158 @@ function showToast(msg, isError) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ── ROTA / DISTÂNCIA — OpenStreetMap (gratuito, sem API key) ──
+const acData = { acOrigem: [], acDestino: [] };
+const acTimers = {};
+
+async function acSearch(input, listId) {
+  const q = input.value.trim();
+  clearTimeout(acTimers[listId]);
+  if (q.length < 3) { acHide(listId); return; }
+  acTimers[listId] = setTimeout(async () => {
+    try {
+      const url = 'https://nominatim.openstreetmap.org/search?q='
+        + encodeURIComponent(q + ', Brasil')
+        + '&format=json&limit=6&addressdetails=1&accept-language=pt-BR';
+      const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+      const data = await r.json();
+      acData[listId] = data;
+      const list = document.getElementById(listId);
+      list.innerHTML = '';
+      if (!data.length) { acHide(listId); return; }
+      data.forEach((item, i) => {
+        const d = document.createElement('div');
+        d.className = 'ac-item';
+        // Monta nome legível: Cidade, Estado, Brasil
+        const parts = item.display_name.split(',').map(s => s.trim());
+        d.textContent = parts.slice(0, 3).join(', ');
+        d.onmousedown = (e) => { e.preventDefault(); acSelect(listId, i, input); };
+        list.appendChild(d);
+      });
+      list.classList.add('show');
+    } catch(e) { acHide(listId); }
+  }, 380);
+}
+
+function acSelect(listId, idx, input) {
+  const item = acData[listId][idx];
+  const parts = item.display_name.split(',').map(s => s.trim());
+  input.value = parts.slice(0, 3).join(', ');
+  input.dataset.lat = item.lat;
+  input.dataset.lon = item.lon;
+  document.getElementById(listId).classList.remove('show');
+}
+
+function acHide(listId) {
+  setTimeout(() => {
+    const el = document.getElementById(listId);
+    if (el) el.classList.remove('show');
+  }, 200);
+}
+
+async function geocodeCidade(query) {
+  const url = 'https://nominatim.openstreetmap.org/search?q='
+    + encodeURIComponent(query + ', Brasil')
+    + '&format=json&limit=1&accept-language=pt-BR';
+  const r = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
+  const d = await r.json();
+  if (!d.length) return null;
+  return { lat: d[0].lat, lon: d[0].lon, nome: d[0].display_name.split(',')[0].trim() };
+}
+
+async function buscarDistancia() {
+  const origemEl  = document.getElementById('origemInput');
+  const destinoEl = document.getElementById('destinoInput');
+  const btn       = document.getElementById('btnRota');
+  const badge     = document.getElementById('routeBadge');
+
+  if (!origemEl.value.trim() || !destinoEl.value.trim()) {
+    showToast('⚠️ Preencha a cidade de origem e destino.', true); return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Buscando cidades...';
+  badge.classList.remove('show');
+
+  try {
+    // Geocode origem
+    let lat1 = origemEl.dataset.lat, lon1 = origemEl.dataset.lon, nomeOrigem;
+    if (!lat1) {
+      const g = await geocodeCidade(origemEl.value);
+      if (!g) { showToast('⚠️ Cidade de origem não encontrada.', true); btn.disabled=false; btn.textContent='🗺️ Buscar Distância e Preencher KM'; return; }
+      lat1 = g.lat; lon1 = g.lon; nomeOrigem = g.nome;
+    } else { nomeOrigem = origemEl.value.split(',')[0].trim(); }
+
+    // Geocode destino
+    let lat2 = destinoEl.dataset.lat, lon2 = destinoEl.dataset.lon, nomeDestino;
+    if (!lat2) {
+      const g = await geocodeCidade(destinoEl.value);
+      if (!g) { showToast('⚠️ Cidade de destino não encontrada.', true); btn.disabled=false; btn.textContent='🗺️ Buscar Distância e Preencher KM'; return; }
+      lat2 = g.lat; lon2 = g.lon; nomeDestino = g.nome;
+    } else { nomeDestino = destinoEl.value.split(',')[0].trim(); }
+
+    btn.textContent = '⏳ Calculando rota rodoviária...';
+
+    // OSRM — rota rodoviária real
+    const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`;
+    const resp = await fetch(osrmUrl);
+    const data = await resp.json();
+
+    if (data.code !== 'Ok' || !data.routes || !data.routes.length) {
+      showToast('⚠️ Não foi possível calcular a rota.', true);
+      btn.disabled=false; btn.textContent='🗺️ Buscar Distância e Preencher KM'; return;
+    }
+
+    const km = Math.round(data.routes[0].distance / 1000);
+    const horas = Math.floor(data.routes[0].duration / 3600);
+    const min   = Math.round((data.routes[0].duration % 3600) / 60);
+
+    document.getElementById('kmInput').value = km;
+
+    badge.innerHTML =
+      `📍 <strong>${nomeOrigem}</strong> → <strong>${nomeDestino}</strong><br>` +
+      `Distância rodoviária: <strong style="color:#c4b5fd;">${km.toLocaleString('pt-BR')} km</strong>` +
+      (horas || min ? ` · Tempo estimado: <strong style="color:#c4b5fd;">${horas}h${min > 0 ? min+'min' : ''}</strong>` : '') +
+      `<br><span style="font-size:.75rem;color:#7c3aed;">Fonte: OpenStreetMap / OSRM</span>`;
+    badge.classList.add('show');
+    showToast(`✅ ${km.toLocaleString('pt-BR')} km — calculando ICMS...`);
+
+    // ── Auto-calcular ICMS após buscar distância ──
+    setTimeout(() => calcular(), 400);
+
+  } catch(e) {
+    showToast('⚠️ Erro de conexão. Verifique a internet e tente novamente.', true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🗺️ Buscar Distância e Preencher KM';
+}
+
+// ── ONLINE / OFFLINE ──
+function atualizarStatusRede() {
+  const online   = navigator.onLine;
+  const btn      = document.getElementById('btnRota');
+  const msg      = document.getElementById('offlineMsg');
+  const origemEl = document.getElementById('origemInput');
+  const destEl   = document.getElementById('destinoInput');
+  if (online) {
+    btn.style.display = 'block';
+    msg.style.display = 'none';
+    origemEl.style.display = 'block';
+    destEl.style.display   = 'block';
+    origemEl.closest('.route-inputs').style.display = 'grid';
+  } else {
+    btn.style.display = 'none';
+    msg.style.display = 'block';
+    origemEl.closest('.route-inputs').style.display = 'none';
+  }
+}
+window.addEventListener('online',  atualizarStatusRede);
+window.addEventListener('offline', atualizarStatusRede);
+
 // ── INIT ──
 populateTipoSelect();
+atualizarStatusRede();
 
 // ── SERVICE WORKER (PWA offline) ──
 if ('serviceWorker' in navigator) {

@@ -1,7 +1,7 @@
 // Service Worker — Calculadora ICMS Frete ANTT 2026
 // Resolve ANTT Nº 6.076/2026 — Elaborado por Wilson Shibata
 
-const CACHE = 'icms-frete-v1';
+const CACHE = 'icms-frete-v2';
 const ASSETS = [
   './index.html',
   './manifest.json',
