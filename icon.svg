@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Fundo -->
+  <rect width="512" height="512" rx="90" fill="#0f172a"/>
+  <!-- Brilho superior -->
+  <ellipse cx="256" cy="80" rx="200" ry="80" fill="rgba(14,165,233,0.13)"/>
+
+  <!-- Corpo do caminhão (carreta) -->
+  <rect x="48" y="210" width="296" height="140" rx="14" fill="#1e3a5f"/>
+  <rect x="50" y="212" width="292" height="136" rx="12" fill="#1e4d8c"/>
+
+  <!-- Cabine -->
+  <rect x="344" y="248" width="128" height="102" rx="14" fill="#0ea5e9"/>
+  <rect x="348" y="260" width="60" height="50" rx="8" fill="#bae6fd"/>
+  <rect x="416" y="272" width="48" height="34" rx="6" fill="#7dd3fc"/>
+
+  <!-- Farol -->
+  <rect x="460" y="290" width="16" height="12" rx="4" fill="#fef08a"/>
+
+  <!-- Chassi -->
+  <rect x="48" y="340" width="430" height="18" rx="4" fill="#0c1a2e"/>
+
+  <!-- Rodas traseiras (2 pares) -->
+  <circle cx="130" cy="368" r="34" fill="#0c1a2e"/>
+  <circle cx="130" cy="368" r="22" fill="#1e293b"/>
+  <circle cx="130" cy="368" r="9"  fill="#334155"/>
+  <circle cx="210" cy="368" r="34" fill="#0c1a2e"/>
+  <circle cx="210" cy="368" r="22" fill="#1e293b"/>
+  <circle cx="210" cy="368" r="9"  fill="#334155"/>
+
+  <!-- Rodas dianteiras -->
+  <circle cx="390" cy="368" r="34" fill="#0c1a2e"/>
+  <circle cx="390" cy="368" r="22" fill="#1e293b"/>
+  <circle cx="390" cy="368" r="9"  fill="#334155"/>
+
+  <!-- Texto ICMS -->
+  <text x="196" y="300" font-size="68" text-anchor="middle"
+        font-family="Arial,Helvetica,sans-serif" font-weight="900"
+        letter-spacing="4" fill="#10b981">ICMS</text>
+
+  <!-- Texto FRETE abaixo -->
+  <text x="196" y="336" font-size="30" text-anchor="middle"
+        font-family="Arial,Helvetica,sans-serif" font-weight="700"
+        letter-spacing="8" fill="#38bdf8">FRETE</text>
+
+  <!-- Linha brilho inferior -->
+  <rect x="48" y="348" width="296" height="3" rx="2" fill="rgba(14,165,233,0.4)"/>
+</svg>

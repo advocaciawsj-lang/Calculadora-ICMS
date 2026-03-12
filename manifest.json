@@ -1,0 +1,14 @@
+{
+  "name": "Calculadora ICMS Frete — ANTT 2026",
+  "short_name": "ICMS Frete",
+  "description": "Calculadora de ICMS sobre Frete conforme Resolução ANTT Nº 6.076/2026",
+  "start_url": "./CALCULADORA_ICMS.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
