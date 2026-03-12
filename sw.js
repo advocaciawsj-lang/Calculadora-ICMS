@@ -3,7 +3,7 @@
 
 const CACHE = 'icms-frete-v1';
 const ASSETS = [
-  './CALCULADORA_ICMS.html',
+  './index.html',
   './manifest.json',
   './icon.svg'
 ];
