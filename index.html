@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Calculadora ICMS Frete — ANTT 2026</title>
+<!-- PWA / iPhone -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ICMS Frete">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0f172a;
+    --card:    #1e293b;
+    --border:  #334155;
+    --accent:  #0ea5e9;
+    --accent2: #0284c7;
+    --green:   #10b981;
+    --green2:  #059669;
+    --text:    #f1f5f9;
+    --muted:   #94a3b8;
+    --radius:  12px;
+    --shadow:  0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #0c1a2e 0%, #1a3a5c 50%, #0f172a 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 24px 28px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(14,165,233,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  .header-icon { font-size: 2.6rem; display: block; margin-bottom: 8px; filter: drop-shadow(0 0 12px rgba(14,165,233,0.5)); }
+  header h1 {
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    font-weight: 800; letter-spacing: .04em;
+    background: linear-gradient(90deg, #e0f2fe, #7dd3fc, #38bdf8);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 4px;
+  }
+  header p { color: var(--muted); font-size: .88rem; letter-spacing: .06em; text-transform: uppercase; }
+  .badges { display: flex; justify-content: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .badge {
+    display: inline-block;
+    background: rgba(14,165,233,.15); border: 1px solid rgba(14,165,233,.35);
+    color: #7dd3fc; font-size: .72rem; font-weight: 700; letter-spacing: .08em;
+    padding: 3px 12px; border-radius: 99px; text-transform: uppercase;
+  }
+  .badge.green {
+    background: rgba(16,185,129,.15); border-color: rgba(16,185,129,.35); color: #6ee7b7;
+  }
+
+  /* ── MAIN ── */
+  main { max-width: 960px; margin: 0 auto; padding: 28px 16px 48px; }
+
+  .section-title {
+    font-size: .75rem; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 12px; padding-left: 2px;
+  }
+
+  /* ── GRIDS ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .grid-1 { margin-bottom: 14px; }
+  @media (max-width: 640px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .card:hover { border-color: rgba(14,165,233,.35); box-shadow: 0 0 0 1px rgba(14,165,233,.07), var(--shadow); }
+  .card-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: .73rem; font-weight: 700; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+  }
+
+  /* ── INPUTS ── */
+  input[type="number"], input[type="text"], select {
+    width: 100%; background: rgba(15,23,42,.8);
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-size: .97rem; padding: 10px 13px;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+    -webkit-appearance: none; appearance: none;
+  }
+  input:focus, select:focus {
+    border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14,165,233,.15);
+  }
+  input::placeholder { color: #475569; }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 11px center;
+    padding-right: 34px; cursor: pointer;
+  }
+  select option { background: #1e293b; color: var(--text); }
+  select:disabled { opacity: .4; cursor: default; }
+  .hint { font-size: .7rem; color: #475569; margin-top: 6px; line-height: 1.4; }
+
+  /* CC display tag */
+  .cc-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.3);
+    color: #6ee7b7; font-size: .82rem; font-weight: 600;
+    padding: 6px 12px; border-radius: 8px; margin-top: 8px;
+  }
+  .cc-tag .cc-label { color: #94a3b8; font-weight: 400; }
+
+  /* custom aliq */
+  .custom-aliq { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .custom-aliq label {
+    font-size: .78rem; color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; gap: 6px; user-select: none;
+  }
+  .custom-aliq input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+  #customAliqInput { width: 85px; padding: 6px 10px; font-size: .88rem; }
+
+  /* encargos split */
+  .enc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+  @media (max-width: 520px) { .enc-row { grid-template-columns: 1fr; } }
+  .enc-sub-label { font-size: .7rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
+
+  /* ── BUTTON ── */
+  .btn-calcular {
+    width: 100%; padding: 15px; font-size: 1.02rem; font-weight: 700;
+    letter-spacing: .07em; text-transform: uppercase; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none; border-radius: var(--radius); cursor: pointer;
+    box-shadow: 0 4px 20px rgba(14,165,233,.35);
+    transition: transform .15s, box-shadow .15s, filter .15s;
+    margin-bottom: 20px; position: relative; overflow: hidden;
+  }
+  .btn-calcular:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(14,165,233,.5); filter: brightness(1.08); }
+  .btn-calcular:active { transform: translateY(0); }
+
+  /* ── RESULTS ── */
+  #resultsCard {
+    display: none; opacity: 0; transform: translateY(12px);
+    transition: opacity .4s, transform .4s; margin-bottom: 20px;
+  }
+  #resultsCard.visible { display: block; opacity: 1; transform: translateY(0); }
+  .results-inner {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 26px; position: relative; overflow: hidden;
+  }
+  .results-inner::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--green), #34d399, var(--accent));
+  }
+  .results-title { font-size: .73rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(51,65,85,.5); font-size: .92rem; }
+  .result-row:last-of-type { border-bottom: none; }
+  .result-label { color: var(--muted); }
+  .result-value { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+  .result-value.highlight { color: #38bdf8; }
+  .result-sep { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+  .result-total {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; background: rgba(16,185,129,.1);
+    border: 1px solid rgba(16,185,129,.3); border-radius: 10px; margin-top: 4px;
+  }
+  .result-total-label { font-size: .82rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6ee7b7; }
+  .result-total-value { font-size: 1.85rem; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums; }
+
+  /* ── ACCORDION ── */
+  .accordion { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+  .accordion-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 20px; cursor: pointer; user-select: none; transition: background .2s;
+  }
+  .accordion-header:hover { background: rgba(14,165,233,.06); }
+  .accordion-header-left { display: flex; align-items: center; gap: 9px; font-size: .86rem; font-weight: 700; letter-spacing: .03em; color: var(--text); }
+  .accordion-chevron { color: var(--muted); font-size: 1rem; transition: transform .3s; }
+  .accordion-chevron.open { transform: rotate(180deg); }
+  .accordion-body { max-height: 0; overflow: hidden; transition: max-height .4s cubic-bezier(.4,0,.2,1); }
+  .accordion-body.open { max-height: 700px; border-top: 1px solid var(--border); }
+  .accordion-body-inner { padding: 18px 20px 22px; overflow-x: auto; }
+
+  /* ── ANTT TABLE (editor) ── */
+  .table-filter { margin-bottom: 14px; }
+  .table-filter label { font-size: .73rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+  .antt-table { width: 100%; border-collapse: collapse; font-size: .84rem; margin-bottom: 16px; min-width: 480px; }
+  .antt-table th {
+    text-align: center; padding: 7px 10px; font-size: .68rem; font-weight: 700;
+    letter-spacing: .09em; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .antt-table th:first-child { text-align: left; }
+  .antt-table td { padding: 7px 10px; border-bottom: 1px solid rgba(51,65,85,.4); vertical-align: middle; text-align: center; }
+  .antt-table tr:last-child td { border-bottom: none; }
+  .antt-table tr:hover td { background: rgba(14,165,233,.04); }
+  .antt-table td:first-child { text-align: left; font-weight: 700; color: var(--accent); white-space: nowrap; }
+  .antt-table .na-cell { color: #475569; font-size: .75rem; }
+  .antt-rate-input { width: 76px; padding: 4px 8px; font-size: .82rem; text-align: right; }
+  .table-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn-save {
+    padding: 9px 20px; font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    background: linear-gradient(135deg, var(--green), var(--green2)); color: #fff;
+    border: none; border-radius: 8px; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(16,185,129,.3); transition: transform .15s, box-shadow .15s;
+  }
+  .btn-save:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(16,185,129,.45); }
+  .btn-restore {
+    padding: 9px 20px; font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    background: transparent; color: var(--muted); border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer; transition: border-color .2s, color .2s;
+  }
+  .btn-restore:hover { border-color: var(--muted); color: var(--text); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 22px; right: 22px;
+    background: #1e293b; border: 1px solid var(--green);
+    color: #6ee7b7; padding: 11px 18px; border-radius: 10px;
+    font-size: .83rem; font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    opacity: 0; transform: translateY(10px);
+    transition: opacity .3s, transform .3s;
+    pointer-events: none; z-index: 9999;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── FOOTER ── */
+  .footer-note { text-align: center; font-size: .72rem; color: #475569; padding: 0 16px 32px; line-height: 1.7; }
+
+  /* ── MOBILE / iPHONE ── */
+  @supports (padding-bottom: env(safe-area-inset-bottom)) {
+    body { padding-bottom: env(safe-area-inset-bottom); }
+    header { padding-top: calc(32px + env(safe-area-inset-top)); }
+  }
+  @media (max-width: 480px) {
+    /* Prevent iOS auto-zoom on focus (font-size >= 16px) */
+    input[type="number"], input[type="text"], select { font-size: 16px !important; }
+    /* Bigger tap targets */
+    .btn-calcular { padding: 18px; font-size: 1.05rem; }
+    .btn-save, .btn-restore { padding: 13px 20px; font-size: .85rem; }
+    select { padding: 12px 34px 12px 13px; }
+    input[type="number"], input[type="text"] { padding: 12px 13px; }
+    .card { padding: 16px; }
+    main { padding: 20px 12px 48px; }
+    .result-total-value { font-size: 1.55rem; }
+    .enc-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <span class="header-icon">🚛</span>
+  <h1>CALCULADORA ICMS FRETE</h1>
+  <p>Resolução ANTT Nº 6.076 — 19 de Janeiro de 2026</p>
+  <div class="badges">
+    <span class="badge">Versão Desktop · Offline</span>
+    <span class="badge green">ANTT 2026 Atualizada</span>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <p class="section-title">Dados do Frete</p>
+
+  <!-- ROW 1: KM + TIPO DE CARGA -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label">📍 Total de KM</div>
+      <input type="number" id="kmInput" placeholder="Ex: 1635" min="0" step="1">
+      <p class="hint">Distância total percorrida em quilômetros.</p>
+    </div>
+    <div class="card">
+      <div class="card-label">📦 Tipo de Carga</div>
+      <select id="tipoCargaSelect" onchange="onTipoCargaChange()"></select>
+      <p class="hint" id="tipoCargaHint">Selecione o tipo de carga transportada.</p>
+    </div>
+  </div>
+
+  <!-- ROW 2: EIXOS + ALIQUOTA -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-label">🚛 Quantidade de Eixos</div>
+      <select id="eixosSelect" onchange="onEixosChange()"></select>
+      <p class="hint" id="eixosHint">Selecione a configuração do veículo.</p>
+    </div>
+    <div class="card">
+      <div class="card-label">📊 Alíquota ICMS</div>
+      <select id="aliqSelect">
+        <option value="17">AC — Acre (17%)</option>
+        <option value="17">AL — Alagoas (17%)</option>
+        <option value="20">AM — Amazonas (20%)</option>
+        <option value="18">AP — Amapá (18%)</option>
+        <option value="18">BA — Bahia (18%)</option>
+        <option value="17">CE — Ceará (17%)</option>
+        <option value="18">DF — Distrito Federal (18%)</option>
+        <option value="17">ES — Espírito Santo (17%)</option>
+        <option value="17">GO — Goiás (17%)</option>
+        <option value="18">MA — Maranhão (18%)</option>
+        <option value="19" selected>MG — Minas Gerais (19%)</option>
+        <option value="17">MS — Mato Grosso do Sul (17%)</option>
+        <option value="17">MT — Mato Grosso (17%)</option>
+        <option value="19">PA — Pará (19%)</option>
+        <option value="18">PB — Paraíba (18%)</option>
+        <option value="18">PE — Pernambuco (18%)</option>
+        <option value="18">PI — Piauí (18%)</option>
+        <option value="12">PR — Paraná (12%)</option>
+        <option value="20">RJ — Rio de Janeiro (20%)</option>
+        <option value="18">RN — Rio Grande do Norte (18%)</option>
+        <option value="17">RO — Rondônia (17%)</option>
+        <option value="17">RR — Roraima (17%)</option>
+        <option value="12">RS — Rio Grande do Sul (12%)</option>
+        <option value="12">SC — Santa Catarina (12%)</option>
+        <option value="18">SE — Sergipe (18%)</option>
+        <option value="12">SP — São Paulo (12%)</option>
+        <option value="18">TO — Tocantins (18%)</option>
+        <option value="12">Interestadual (12%)</option>
+      </select>
+      <div class="custom-aliq">
+        <label><input type="checkbox" id="customAliqCheck"> Alíquota personalizada:</label>
+        <input type="number" id="customAliqInput" placeholder="%" min="0" max="100" step="0.01" style="display:none;">
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3: ENCARGOS -->
+  <div class="grid-1">
+    <div class="card">
+      <div class="card-label">➕ Encargos Adicionais</div>
+      <div class="enc-row">
+        <div>
+          <p class="enc-sub-label">Carga e Descarga — ANTT (CC)</p>
+          <div class="cc-tag" id="ccTag">
+            <span class="cc-label">CC:</span>
+            <span id="ccValue">Selecione tipo e eixos</span>
+          </div>
+          <p class="hint">Valor automático conforme Res. ANTT 6.076/2026.<br>Incluso no cálculo do ICMS.</p>
+        </div>
+        <div>
+          <p class="enc-sub-label">Outros Encargos (R$)</p>
+          <input type="text" id="outrosEncargosInput" placeholder="Ex: 350,00">
+          <p class="hint">Pedágio, GRIS, Ad Valorem, taxas extras, etc.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALCULAR -->
+  <button class="btn-calcular" onclick="calcular()">⚡ Calcular ICMS</button>
+
+  <!-- RESULTS -->
+  <div id="resultsCard">
+    <div class="results-inner">
+      <p class="results-title">📋 Resultado do Cálculo — Res. ANTT 6.076/2026</p>
+      <div class="result-row">
+        <span class="result-label">Deslocamento (CCD × km)</span>
+        <span class="result-value" id="rDeslocamento">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Carga e Descarga — ANTT (CC)</span>
+        <span class="result-value highlight" id="rCC">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Outros Encargos</span>
+        <span class="result-value" id="rOutros">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Total Base ICMS</span>
+        <span class="result-value" id="rTotalBase">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Alíquota ICMS</span>
+        <span class="result-value" id="rAliquota">—</span>
+      </div>
+      <hr class="result-sep">
+      <div class="result-total">
+        <span class="result-total-label">💰 Total ICMS</span>
+        <span class="result-total-value" id="rTotalICMS">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCORDION: TABELA ANTT 2026 -->
+  <div class="accordion">
+    <div class="accordion-header" onclick="toggleAccordion()">
+      <div class="accordion-header-left">
+        <span>✏️</span>
+        <span>Tabela ANTT 2026 — Editar Coeficientes (Res. 6.076/2026)</span>
+      </div>
+      <span class="accordion-chevron" id="accordionChevron">▼</span>
+    </div>
+    <div class="accordion-body" id="accordionBody">
+      <div class="accordion-body-inner">
+        <div class="table-filter">
+          <label>Filtrar por Tipo de Carga:</label>
+          <select id="tableFilterSelect" onchange="renderEditorTable()"></select>
+        </div>
+        <table class="antt-table" id="anttTable">
+          <thead>
+            <tr>
+              <th>Eixos</th>
+              <th>CCD (R$/km)</th>
+              <th>CC — Carga/Descarga (R$)</th>
+            </tr>
+          </thead>
+          <tbody id="anttTbody"></tbody>
+        </table>
+        <div class="table-actions">
+          <button class="btn-save" onclick="salvarTabela()">💾 Salvar Tabela</button>
+          <button class="btn-restore" onclick="restaurarPadroes()">↺ Restaurar Padrões ANTT 2026</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<p class="footer-note">
+  Baseado na <strong style="color:#64748b">Resolução ANTT Nº 6.076, de 19 de Janeiro de 2026</strong>.<br>
+  Os coeficientes editados são salvos automaticamente no navegador.<br>
+  Abra este arquivo no Edge, Chrome ou Firefox — funciona 100% offline.<br><br>
+  <span style="color:#64748b;">Elaborado por <strong style="color:#7dd3fc;">Wilson Shibata</strong></span>
+</p>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  TABELA ANTT — Resolução 6.076/2026
+//  Estrutura: tipoCarga → eixos → { ccd: R$/km, cc: R$ }
+// ══════════════════════════════════════════════════════
+const DEFAULT_ANTT = [
+  { id:1,  label:'Granel Sólido',                     eixos:{2:{ccd:3.7123,cc:444.84},3:{ccd:4.7427,cc:533.36},4:{ccd:5.3672,cc:576.59},5:{ccd:6.1859,cc:642.10},6:{ccd:6.8058,cc:656.76},7:{ccd:7.4505,cc:792.30},9:{ccd:8.5300,cc:877.83}} },
+  { id:2,  label:'Granel Líquido',                    eixos:{2:{ccd:3.7837,cc:455.84},3:{ccd:4.8350,cc:550.10},4:{ccd:5.5162,cc:600.27},5:{ccd:6.3480,cc:669.38},6:{ccd:6.9730,cc:685.45},7:{ccd:7.5842,cc:811.76},9:{ccd:8.6837,cc:902.80}} },
+  { id:3,  label:'Frigorificada ou Aquecida',         eixos:{2:{ccd:4.3423,cc:502.29},3:{ccd:5.5387,cc:601.96},4:{ccd:6.3226,cc:663.16},5:{ccd:7.2435,cc:732.07},6:{ccd:7.9625,cc:745.94},7:{ccd:8.8534,cc:949.16},9:{ccd:10.0426,cc:1030.58}} },
+  { id:4,  label:'Conteinerizada',                    eixos:{2:null,           3:{ccd:4.7164,cc:526.13},4:{ccd:5.2975,cc:557.42},5:{ccd:6.1243,cc:625.16},6:{ccd:6.7426,cc:639.38},7:{ccd:7.4482,cc:791.67},9:{ccd:8.4497,cc:855.76}} },
+  { id:5,  label:'Carga Geral',                       eixos:{2:{ccd:3.6815,cc:436.39},3:{ccd:4.7062,cc:523.33},4:{ccd:5.3386,cc:568.72},5:{ccd:6.1604,cc:635.08},6:{ccd:6.7774,cc:648.95},7:{ccd:7.4902,cc:803.22},9:{ccd:8.5104,cc:872.44}} },
+  { id:6,  label:'Neogranel',                         eixos:{2:{ccd:3.3488,cc:436.39},3:{ccd:4.7048,cc:522.93},4:{ccd:5.3649,cc:575.96},5:{ccd:6.1604,cc:635.08},6:{ccd:6.7774,cc:648.95},7:{ccd:7.4902,cc:803.22},9:{ccd:8.5104,cc:872.44}} },
+  { id:7,  label:'Perigosa — Granel Sólido',          eixos:{2:{ccd:4.4560,cc:587.98},3:{ccd:5.4960,cc:679.12},4:{ccd:6.1560,cc:727.28},5:{ccd:6.9747,cc:792.80},6:{ccd:7.5946,cc:807.45},7:{ccd:8.2569,cc:947.84},9:{ccd:9.3441,cc:1035.49}} },
+  { id:8,  label:'Perigosa — Granel Líquido',         eixos:{2:{ccd:4.5395,cc:610.96},3:{ccd:5.6004,cc:707.85},4:{ccd:6.2857,cc:762.95},5:{ccd:7.1175,cc:832.06},6:{ccd:7.7425,cc:848.13},7:{ccd:8.3713,cc:979.29},9:{ccd:9.4785,cc:1072.44}} },
+  { id:9,  label:'Perigosa — Frigorificada/Aquecida', eixos:{2:{ccd:4.9296,cc:609.31},3:{ccd:6.1385,cc:712.41},4:{ccd:6.9381,cc:780.02},5:{ccd:7.8590,cc:848.93},6:{ccd:8.5780,cc:862.80},7:{ccd:9.4918,cc:1072.32},9:{ccd:10.6910,cc:1156.49}} },
+  { id:10, label:'Perigosa — Conteinerizada',         eixos:{2:null,           3:{ccd:5.0876,cc:623.38},4:{ccd:5.7042,cc:659.60},5:{ccd:6.5311,cc:727.35},6:{ccd:7.1493,cc:741.56},7:{ccd:7.8726,cc:898.70},9:{ccd:8.8818,cc:964.90}} },
+  { id:11, label:'Perigosa — Carga Geral',            eixos:{2:{ccd:4.0432,cc:531.01},3:{ccd:5.0774,cc:620.58},4:{ccd:5.7453,cc:670.91},5:{ccd:6.5671,cc:737.27},6:{ccd:7.1841,cc:751.14},7:{ccd:7.9146,cc:910.26},9:{ccd:8.9424,cc:981.58}} },
+  { id:12, label:'Carga Granel Pressurizada',         eixos:{2:null,           3:null,           4:null,           5:{ccd:6.5125,cc:731.90},6:{ccd:7.1739,cc:757.99},7:null,            9:{ccd:9.0335,cc:1016.29}} },
+];
+
+const EIXOS_LIST = [2, 3, 4, 5, 6, 7, 9];
+const EIXOS_LABEL = { 2:'2 Eixos — Caminhão Simples', 3:'3 Eixos — Truck', 4:'4 Eixos — Carreta Simples', 5:'5 Eixos — Carreta Trucada', 6:'6 Eixos — Bi-trem', 7:'7 Eixos — Rodotrem', 9:'9 Eixos — Rodotrem/Bitruck' };
+const STORAGE_KEY = 'antt2026_v1';
+
+// ── load / clone ──
+function loadTable() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) { const p = JSON.parse(s); if (p && p.length === DEFAULT_ANTT.length) return p; }
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_ANTT));
+}
+
+let table = loadTable();
+
+// ── get entry from working table ──
+function getEntry(tipoId) { return table.find(t => t.id === tipoId); }
+
+// ── POPULATE TIPO DE CARGA ──
+function populateTipoSelect() {
+  const sel = document.getElementById('tipoCargaSelect');
+  const flt = document.getElementById('tableFilterSelect');
+  table.forEach(t => {
+    [sel, flt].forEach(s => {
+      const o = document.createElement('option');
+      o.value = t.id;
+      o.textContent = t.id + '. ' + t.label;
+      s.appendChild(o);
+    });
+  });
+  sel.value = '5'; // Carga Geral default
+  flt.value = '5';
+  onTipoCargaChange();
+}
+
+// ── POPULATE EIXOS for selected tipo ──
+function populateEixosSelect() {
+  const tipoId = parseInt(document.getElementById('tipoCargaSelect').value);
+  const entry = getEntry(tipoId);
+  const sel = document.getElementById('eixosSelect');
+  const prevVal = sel.value;
+  sel.innerHTML = '';
+  EIXOS_LIST.forEach(e => {
+    const opt = document.createElement('option');
+    opt.value = e;
+    const data = entry.eixos[e];
+    if (data) {
+      opt.textContent = EIXOS_LABEL[e] + '  (R$ ' + fmtDec(data.ccd) + '/km)';
+    } else {
+      opt.textContent = EIXOS_LABEL[e] + '  — não disponível';
+      opt.disabled = true;
+    }
+    sel.appendChild(opt);
+  });
+  // try to keep previous or pick 6 eixos or first available
+  const preferred = [prevVal, '6', '5', '7', '3', '4', '2', '9'];
+  for (const v of preferred) {
+    const opt = [...sel.options].find(o => o.value === String(v) && !o.disabled);
+    if (opt) { sel.value = opt.value; break; }
+  }
+  updateHints();
+}
+
+function onTipoCargaChange() {
+  populateEixosSelect();
+}
+
+function onEixosChange() {
+  updateHints();
+}
+
+function updateHints() {
+  const tipoId = parseInt(document.getElementById('tipoCargaSelect').value);
+  const eixos  = parseInt(document.getElementById('eixosSelect').value);
+  const entry  = getEntry(tipoId);
+  const data   = entry ? entry.eixos[eixos] : null;
+
+  if (data) {
+    document.getElementById('eixosHint').textContent =
+      'CCD: R$ ' + fmtDec(data.ccd) + '/km — ' + EIXOS_LABEL[eixos];
+    document.getElementById('ccValue').textContent =
+      'R$ ' + fmtBRL(data.cc);
+    document.getElementById('ccValue').dataset.val = data.cc;
+    document.getElementById('tipoCargaHint').textContent =
+      entry.label + ' · CC = R$ ' + fmtBRL(data.cc) + ' · CCD = R$ ' + fmtDec(data.ccd) + '/km';
+  } else {
+    document.getElementById('eixosHint').textContent = 'Combinação não disponível para este tipo de carga.';
+    document.getElementById('ccValue').textContent = 'Não disponível';
+    document.getElementById('ccValue').dataset.val = '0';
+    document.getElementById('tipoCargaHint').textContent = 'Sem dados para esta combinação.';
+  }
+}
+
+// ── FORMAT ──
+function fmtDec(v) { return v.toFixed(4).replace('.', ','); }
+function fmtBRL(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function parseNum(s) {
+  if (s == null || s === '') return NaN;
+  s = String(s).trim();
+  if (s.includes(',') && s.includes('.')) s = s.replace(/\./g,'').replace(',','.');
+  else if (s.includes(',')) s = s.replace(',','.');
+  return parseFloat(s);
+}
+
+// ── CUSTOM ALIQ ──
+document.getElementById('customAliqCheck').addEventListener('change', function() {
+  const ci = document.getElementById('customAliqInput');
+  const sel = document.getElementById('aliqSelect');
+  if (this.checked) { ci.style.display='inline-block'; sel.style.opacity='.4'; sel.disabled=true; ci.focus(); }
+  else              { ci.style.display='none';          sel.style.opacity='1';  sel.disabled=false; }
+});
+
+// ── CALCULAR ──
+function calcular() {
+  const km = parseNum(document.getElementById('kmInput').value);
+  if (isNaN(km) || km <= 0) { showToast('⚠️ Informe a quantidade de KM válida.', true); document.getElementById('kmInput').focus(); return; }
+
+  const tipoId = parseInt(document.getElementById('tipoCargaSelect').value);
+  const eixos  = parseInt(document.getElementById('eixosSelect').value);
+  const entry  = getEntry(tipoId);
+  const data   = entry ? entry.eixos[eixos] : null;
+
+  if (!data) { showToast('⚠️ Combinação tipo/eixos indisponível na tabela ANTT.', true); return; }
+
+  const deslocamento = km * data.ccd;
+  const cc           = data.cc;
+  const outros       = parseNum(document.getElementById('outrosEncargosInput').value) || 0;
+  const totalBase    = deslocamento + cc + outros;
+
+  let aliquota;
+  if (document.getElementById('customAliqCheck').checked) {
+    aliquota = parseNum(document.getElementById('customAliqInput').value);
+    if (isNaN(aliquota) || aliquota < 0) { showToast('⚠️ Informe a alíquota personalizada.', true); return; }
+  } else {
+    aliquota = parseFloat(document.getElementById('aliqSelect').value);
+  }
+
+  const totalICMS = totalBase * (aliquota / 100);
+
+  document.getElementById('rDeslocamento').textContent = 'R$ ' + fmtBRL(deslocamento);
+  document.getElementById('rCC').textContent           = 'R$ ' + fmtBRL(cc);
+  document.getElementById('rOutros').textContent       = 'R$ ' + fmtBRL(outros);
+  document.getElementById('rTotalBase').textContent    = 'R$ ' + fmtBRL(totalBase);
+  document.getElementById('rAliquota').textContent     = aliquota.toFixed(2).replace('.',',') + '%';
+  document.getElementById('rTotalICMS').textContent    = 'R$ ' + fmtBRL(totalICMS);
+
+  const card = document.getElementById('resultsCard');
+  card.style.display = 'block';
+  void card.offsetHeight;
+  card.classList.add('visible');
+  setTimeout(() => card.scrollIntoView({ behavior:'smooth', block:'nearest' }), 80);
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') calcular(); });
+
+// ── ACCORDION ──
+let accOpen = false;
+function toggleAccordion() {
+  accOpen = !accOpen;
+  document.getElementById('accordionBody').classList.toggle('open', accOpen);
+  document.getElementById('accordionChevron').classList.toggle('open', accOpen);
+  if (accOpen) renderEditorTable();
+}
+
+// ── EDITOR TABLE ──
+function renderEditorTable() {
+  const tipoId = parseInt(document.getElementById('tableFilterSelect').value);
+  const entry  = getEntry(tipoId);
+  const tbody  = document.getElementById('anttTbody');
+  tbody.innerHTML = '';
+  EIXOS_LIST.forEach(e => {
+    const d = entry.eixos[e];
+    const tr = document.createElement('tr');
+    if (d) {
+      tr.innerHTML = `
+        <td>${EIXOS_LABEL[e]}</td>
+        <td><input class="antt-rate-input" type="text" data-tipo="${tipoId}" data-eixos="${e}" data-field="ccd" value="${fmtDec(d.ccd)}"></td>
+        <td><input class="antt-rate-input" type="text" data-tipo="${tipoId}" data-eixos="${e}" data-field="cc"  value="${d.cc.toFixed(2).replace('.',',')}"></td>`;
+    } else {
+      tr.innerHTML = `<td>${EIXOS_LABEL[e]}</td><td class="na-cell">—</td><td class="na-cell">—</td>`;
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// ── SAVE TABLE ──
+function salvarTabela() {
+  document.querySelectorAll('.antt-rate-input').forEach(inp => {
+    const tipoId = parseInt(inp.dataset.tipo);
+    const eixos  = parseInt(inp.dataset.eixos);
+    const field  = inp.dataset.field;
+    const v      = parseNum(inp.value);
+    if (!isNaN(v) && v > 0) {
+      const entry = getEntry(tipoId);
+      if (entry && entry.eixos[eixos]) entry.eixos[eixos][field] = v;
+    }
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(table));
+  populateEixosSelect();
+  showToast('✅ Tabela ANTT 2026 salva com sucesso!');
+}
+
+// ── RESTORE ──
+function restaurarPadroes() {
+  table = JSON.parse(JSON.stringify(DEFAULT_ANTT));
+  localStorage.removeItem(STORAGE_KEY);
+  populateEixosSelect();
+  renderEditorTable();
+  showToast('↺ Valores padrão ANTT 2026 restaurados.');
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = isError ? '#ef4444' : 'var(--green)';
+  t.style.color       = isError ? '#fca5a5' : '#6ee7b7';
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ──
+populateTipoSelect();
+
+// ── SERVICE WORKER (PWA offline) ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
